@@ -19,10 +19,13 @@ import core.Attacker;
 import org.junit.jupiter.api.Test;
 
 public class TestExampleLang extends ExampleLangTest {
+
+  public static boolean isEncryptedEnabled = false;
+
   private static class ExampleLangModel {
     public final Network internet = new Network("internet");
     public final Host server = new Host("server");
-    public final Password password123 = new Password("password123");
+    public final Password password123 = new Password("password123", isEncryptedEnabled);
 
     public ExampleLangModel() {
       internet.addHosts(server);
@@ -30,8 +33,12 @@ public class TestExampleLang extends ExampleLangTest {
     }
   }
 
+
   @Test
   public void testAccess() {
+    // disable encryption
+    isEncryptedEnabled = false;
+
     var model = new ExampleLangModel();
 
     var attacker = new Attacker();
@@ -43,7 +50,10 @@ public class TestExampleLang extends ExampleLangTest {
   }
 
   @Test
-  public void testNoPassword() {
+  public void testNoPasswordEncrypted() {
+    // enable encryption
+    isEncryptedEnabled = true;
+
     var model = new ExampleLangModel();
 
     var attacker = new Attacker();
@@ -51,6 +61,20 @@ public class TestExampleLang extends ExampleLangTest {
     attacker.attack();
 
     model.server.access.assertUncompromised();
+  }
+
+  @Test
+  public void testNoPasswordNotEncrypted() {
+    // disable encryption
+    isEncryptedEnabled = false;
+
+    var model = new ExampleLangModel();
+
+    var attacker = new Attacker();
+    attacker.addAttackPoint(model.internet.access);
+    attacker.attack();
+
+    model.server.access.assertCompromisedInstantaneously();
   }
 
   @Test
