@@ -19,11 +19,14 @@ import core.Attacker;
 import org.junit.jupiter.api.Test;
 
 public class TestPhishing extends ExampleLangTest {
+
+  public static boolean isEncryptedEnabled = false;
+
   private static class PhishingModel {
     public final Network internet = new Network("internet");
     public final Host server = new Host("server");
     public final User alice = new User("Alice");
-    public final Password password123 = new Password("password123");
+    public final Password password123 = new Password("password123", isEncryptedEnabled);
 
     public PhishingModel() {
       internet.addHosts(server);
@@ -33,7 +36,25 @@ public class TestPhishing extends ExampleLangTest {
   }
 
   @Test
-  public void testPhishing() {
+  public void testPhishingNotEncrypted() {
+    // disable encryption
+    isEncryptedEnabled = false;
+
+    var model = new PhishingModel();
+
+    var attacker = new Attacker();
+    attacker.addAttackPoint(model.internet.access);
+    attacker.addAttackPoint(model.alice.attemptPhishing);
+    attacker.attack();
+
+    model.server.access.assertCompromisedInstantaneously();
+  }
+
+  @Test
+  public void testPhishingEncrypted() {
+    // enable encryption
+    isEncryptedEnabled = true;
+
     var model = new PhishingModel();
 
     var attacker = new Attacker();
