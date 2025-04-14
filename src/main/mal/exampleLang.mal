@@ -24,13 +24,10 @@ category System {
 
   asset Host {
     | connect
-      -> access
+      -> access,
+         passwords.read
     | authenticate
       -> access
-    | guessPassword
-      -> guessedPassword
-    | guessedPassword [Exponential(0.02)]
-      -> authenticate
     & access
   }
 
@@ -42,8 +39,14 @@ category System {
   }
 
   asset Password {
+    & read
+      -> obtain
     | obtain
       -> host.authenticate
+    # encrypted
+      -> read
+    | quantum
+      -> encrypted
   }
 }
 
