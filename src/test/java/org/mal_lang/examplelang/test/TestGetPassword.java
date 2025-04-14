@@ -1,0 +1,93 @@
+/*
+ * Copyright 2020-2022 Foreseeti AB <https://foreseeti.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.mal_lang.examplelang.test;
+
+import core.Attacker;
+import org.junit.jupiter.api.Test;
+
+public class TestGetPassword extends ExampleLangTest {
+
+  public static boolean isEncryptedEnabled = false;
+
+  private static class GetPasswordModel {
+    public final Network internet = new Network("internet");
+    public final Host server = new Host("server");
+    public final Password password123 = new Password("password123", isEncryptedEnabled);
+
+    public GetPasswordModel() {
+      internet.addHosts(server);
+      server.addPasswords(password123);
+    }
+  }
+
+  @Test
+  public void testGetPasswordQuantumNotEncrypted() {
+    // disable encryption
+    isEncryptedEnabled = false;
+
+    var model = new GetPasswordModel();
+
+    var attacker = new Attacker();
+    attacker.addAttackPoint(model.internet.access);
+    attacker.addAttackPoint(model.password123.quantum);
+    attacker.attack();
+
+    model.server.access.assertCompromisedInstantaneously();
+  }
+
+  @Test
+  public void testGetPasswordQuantumEncrypted() {
+    // enable encryption
+    isEncryptedEnabled = true;
+
+    var model = new GetPasswordModel();
+
+    var attacker = new Attacker();
+    attacker.addAttackPoint(model.internet.access);
+    attacker.addAttackPoint(model.password123.quantum);
+    attacker.attack();
+
+    model.server.access.assertCompromisedInstantaneously();
+  }
+
+  @Test
+  public void testGetPasswordNonQuantumNotEncrypted() {
+    // disable encryption
+    isEncryptedEnabled = false;
+
+    var model = new GetPasswordModel();
+
+    var attacker = new Attacker();
+    attacker.addAttackPoint(model.internet.access);
+    attacker.attack();
+
+    model.server.access.assertCompromisedInstantaneously();
+  }
+
+  @Test
+  public void testGetPasswordNonQuantumEncrypted() {
+    // enable encryption
+    isEncryptedEnabled = true;
+
+    var model = new GetPasswordModel();
+
+    var attacker = new Attacker();
+    attacker.addAttackPoint(model.internet.access);
+    attacker.attack();
+
+    model.server.access.assertUncompromised();
+  }
+}
