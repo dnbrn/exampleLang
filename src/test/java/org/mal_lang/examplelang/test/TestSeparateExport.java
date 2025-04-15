@@ -16,7 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
  * TestSeparateExport
  */
 @ExtendWith(CoverageExtension.class)
-public class TestSeparateExport extends ExampleLangTest {
+public class TestSeparateExport {
 	@RegisterExtension
 	public CoverageExtension cove = new CoverageExtension(new JSONTarget());
 
@@ -28,20 +28,7 @@ public class TestSeparateExport extends ExampleLangTest {
 	private static Password password;
 
 	// enable encryption
-	public static boolean isEncryptedEnabled = true;
-
-	/*
-	private static class ExampleLangModel {
-		private static Network internet = new Network("internet");
-		private static Host machine = new Host("server");
-		private static Password password123 = new Password("password123", isEncryptedEnabled);
-
-		public ExampleLangModel() {
-			internet.addHosts(server);
-			server.addPasswords(password123);
-		}
-	}
-	 */
+	public static boolean isEncryptedEnabled = false;
 
 	@BeforeAll
 	public static void setup() {
@@ -60,7 +47,7 @@ public class TestSeparateExport extends ExampleLangTest {
 
 	/*
 	method from ExampleLangTest.java
-	shown for comprehensibility purposes
+	potentially useful
 
 	@AfterEach
 	public void deleteModel() {
@@ -72,7 +59,7 @@ public class TestSeparateExport extends ExampleLangTest {
 
 	@AfterAll
 	public static void clear() {
-		password.encrypted.defaultValue = isEncryptedEnabled;
+		password.encrypted.defaultValue = false;
 	}
 
 	@Test
