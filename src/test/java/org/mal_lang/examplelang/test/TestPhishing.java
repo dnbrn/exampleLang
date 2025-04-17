@@ -15,53 +15,62 @@
  */
 package org.mal_lang.examplelang.test;
 
-import core.Attacker;
+import core.*;
+import core.coverage.*;
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 
 public class TestPhishing extends ExampleLangTest {
 
-  public static boolean isEncryptedEnabled = false;
+  private static Network internet;
+  private static Host server;
+  private static Password password;
+  private static User alice;
 
-  private static class PhishingModel {
-    public final Network internet = new Network("internet");
-    public final Host server = new Host("server");
-    public final User alice = new User("Alice");
-    public final Password password123 = new Password("password123", isEncryptedEnabled);
+  // disable encryption by default
+  public static boolean isEncryptedEnabledDefault = false;
 
-    public PhishingModel() {
-      internet.addHosts(server);
-      server.addPasswords(password123);
-      alice.addPasswords(password123);
-    }
+  @BeforeAll
+  public static void setup() {
+    internet = new Network("internet");
+    server = new Host("server");
+    alice = new User("Alice");
+    password = new Password("password", isEncryptedEnabledDefault);
+
+    internet.addHosts(server);
+    server.addPasswords(password);
+    alice.addPasswords(password);
+  }
+
+  @AfterAll
+  public static void clear() {
+    password.encrypted.defaultValue = isEncryptedEnabledDefault;
   }
 
   @Test
   public void testPhishingNotEncrypted() {
-    // disable encryption
-    isEncryptedEnabled = false;
+    password.encrypted.defaultValue = false;
+    Attacker attacker = new Attacker();
 
-    var model = new PhishingModel();
-
-    var attacker = new Attacker();
-    attacker.addAttackPoint(model.internet.access);
-    attacker.addAttackPoint(model.alice.attemptPhishing);
+    attacker.addAttackPoint(internet.access);
+    attacker.addAttackPoint(alice.attemptPhishing);
     attacker.attack();
 
-    model.server.access.assertCompromisedInstantaneously();
+    server.access.assertCompromisedInstantaneously(); // TODO necessary?
   }
 
   @Test
   public void testPhishingEncrypted() {
-    // enable encryption
-    isEncryptedEnabled = true;
+    password.encrypted.defaultValue = true;
+    Attacker attacker = new Attacker();
 
-    var model = new PhishingModel();
-
-    var attacker = new Attacker();
-    attacker.addAttackPoint(model.internet.access);
-    attacker.addAttackPoint(model.alice.attemptPhishing);
+    attacker.addAttackPoint(internet.access);
+    attacker.addAttackPoint(alice.attemptPhishing);
     attacker.attack();
 
-    model.server.access.assertCompromisedWithEffort();
+    server.access.assertCompromisedWithEffort(); // TODO necessary?
   }
 }

@@ -15,76 +15,81 @@
  */
 package org.mal_lang.examplelang.test;
 
-import core.Attacker;
+import core.*;
+import core.coverage.*;
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 
 public class TestExampleLang extends ExampleLangTest {
 
-  public static boolean isEncryptedEnabled = false;
+  private static Network internet;
+  private static Host server;
+  private static Password password;
 
-  private static class ExampleLangModel {
-    public final Network internet = new Network("internet");
-    public final Host server = new Host("server");
-    public final Password password123 = new Password("password123", isEncryptedEnabled);
+  // disable encryption by default
+  public static boolean isEncryptedEnabledDefault = false;
 
-    public ExampleLangModel() {
-      internet.addHosts(server);
-      server.addPasswords(password123);
-    }
+  @BeforeAll
+  public static void setup() {
+    internet = new Network("internet");
+    server = new Host("server");
+    password = new Password("password", isEncryptedEnabledDefault);
+
+    internet.addHosts(server);
+    server.addPasswords(password);
   }
 
+  @AfterAll
+  public static void clear() {
+    password.encrypted.defaultValue = isEncryptedEnabledDefault;
+  }
 
   @Test
   public void testAccess() {
-    // disable encryption
-    isEncryptedEnabled = false;
+    password.encrypted.defaultValue = false;
+    Attacker attacker = new Attacker();
 
-    var model = new ExampleLangModel();
-
-    var attacker = new Attacker();
-    attacker.addAttackPoint(model.internet.access);
-    attacker.addAttackPoint(model.password123.obtain);
+    attacker.addAttackPoint(internet.access);
+    attacker.addAttackPoint(password.obtain);
     attacker.attack();
 
-    model.server.access.assertCompromisedInstantaneously();
+    server.access.assertCompromisedInstantaneously(); // TODO necessary?
   }
 
   @Test
   public void testNoPasswordEncrypted() {
-    // enable encryption
-    isEncryptedEnabled = true;
+    password.encrypted.defaultValue = true;
+    Attacker attacker = new Attacker();
 
-    var model = new ExampleLangModel();
-
-    var attacker = new Attacker();
-    attacker.addAttackPoint(model.internet.access);
+    attacker.addAttackPoint(internet.access);
     attacker.attack();
 
-    model.server.access.assertUncompromised();
+    server.access.assertUncompromised(); // TODO necessary?
   }
 
   @Test
   public void testNoPasswordNotEncrypted() {
-    // disable encryption
-    isEncryptedEnabled = false;
+    password.encrypted.defaultValue = false;
+    Attacker attacker = new Attacker();
 
-    var model = new ExampleLangModel();
-
-    var attacker = new Attacker();
-    attacker.addAttackPoint(model.internet.access);
+    attacker.addAttackPoint(internet.access);
     attacker.attack();
 
-    model.server.access.assertCompromisedInstantaneously();
+    server.access.assertCompromisedInstantaneously(); // TODO necessary?
   }
 
   @Test
   public void testNoNetwork() {
-    var model = new ExampleLangModel();
+    password.encrypted.defaultValue = false;
+    Attacker attacker = new Attacker();
 
-    var attacker = new Attacker();
-    attacker.addAttackPoint(model.password123.obtain);
+    attacker.addAttackPoint(password.obtain);
     attacker.attack();
 
-    model.server.access.assertUncompromised();
+    server.access.assertUncompromised(); // TODO necessary?
+    // TODO correct with no network?
   }
 }

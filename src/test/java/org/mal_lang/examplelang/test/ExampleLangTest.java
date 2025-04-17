@@ -15,16 +15,33 @@
  */
 package org.mal_lang.examplelang.test;
 
-import core.Asset;
-import core.AttackStep;
-import core.Defense;
-import org.junit.jupiter.api.AfterEach;
+import core.*;
+import core.coverage.*;
 
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Test;
+
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.extension.ExtendWith;
+
+@ExtendWith(CoverageExtension.class)
 public class ExampleLangTest {
-  @AfterEach
-  public void deleteModel() {
-    Asset.allAssets.clear();
-    AttackStep.allAttackSteps.clear();
-    Defense.allDefenses.clear();
-  }
+    @RegisterExtension
+    public CoverageExtension coverageJSON = new CoverageExtension(new JSONTarget());
+
+    @RegisterExtension
+    public CoverageExtension coverageConsole = new CoverageExtension(new ConsoleTarget());
+
+    @BeforeEach
+    public void clearMdl() {
+        new Attacker().reset();
+    }
+
+    @AfterAll
+    public static void clearEncryptionDefaults() {
+        // This is just a fallback if the extending class doesn't override it
+    }
 }
